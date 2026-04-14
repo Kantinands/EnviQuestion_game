@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Environment Day Quiz Show</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #e8f5e9; 
+            --panel-easy: #81c784; 
+            --panel-med: #ffb74d;  
+            --panel-hard: #e57373;  
+            --primary-dark: #1b5e20; 
+            --accent-blue: #0288d1;  
+            --white: #ffffff;
+        }
+
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            background-color: var(--bg-color); 
+            background-image: url('https://www.transparenttextures.com/patterns/leaf.png');
+            color: #333; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+        }
+
+        h1 { 
+            color: var(--primary-dark); 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1); 
+            margin-top: 30px;
+            font-size: 2.2rem;
+            text-align: center;
+        }
+
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 900px; padding: 20px; box-sizing: border-box; }
+        .screen.active { display: flex; }
+
+        .login-box { 
+            background: var(--white); 
+            padding: 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 15px 35px rgba(27, 94, 32, 0.2); 
+            text-align: center;
+            border: 3px solid var(--primary-dark);
+            width: 100%;
+            max-width: 450px;
+        }
+        input[type="text"] { 
+            padding: 15px; width: 85%; font-size: 1.2rem; border-radius: 12px; 
+            border: 2px solid var(--panel-easy); background: #f1f8e9; 
+            color: var(--primary-dark); margin-bottom: 20px; text-align: center;
+        }
+        button.btn-start { 
+            background: var(--primary-dark); color: var(--white); font-weight: bold; font-size: 1.3rem; 
+            padding: 15px 40px; border: none; border-radius: 50px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        button.btn-start:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); background: #2e7d32; }
+
+        .header-bar { 
+            display: flex; justify-content: space-between; width: 100%; font-size: 1.3rem; 
+            margin-bottom: 25px; background: var(--primary-dark); color: white; 
+            padding: 20px 35px; border-radius: 18px; box-sizing: border-box;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .score-text { color: #fbc02d; font-weight: bold; }
+
+        .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; }
+        .column-title { 
+            text-align: center; font-size: 1.1rem; font-weight: bold; padding: 15px 10px; 
+            border-radius: 15px 15px 0 0; background: rgba(255,255,255,0.85); margin-bottom: 15px;
+        }
+
+        .panel { 
+            height: 90px; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.6rem; font-weight: bold; border-radius: 15px; cursor: pointer; 
+            transition: 0.3s; box-shadow: 0 5px 0 rgba(0,0,0,0.1); margin-bottom: 12px;
+            border: 2px solid rgba(0,0,0,0.05);
+        }
+        .panel.easy { background: linear-gradient(135deg, #a5d6a7, #81c784); color: #1b5e20; }
+        .panel.med { background: linear-gradient(135deg, #ffcc80, #ffb74d); color: #e65100; }
+        .panel.hard { background: linear-gradient(135deg, #ef9a9a, #e57373); color: #b71c1c; }
+        .panel.disabled { background: #cfd8dc !important; color: #78909c !important; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px);}
+        .modal-content { 
+            background: #ffffff; padding: 35px; border-radius: 30px; width: 90%; max-width: 550px; 
+            text-align: center; border: 6px solid var(--panel-easy); 
+        }
+        .question-text { font-size: 1.4rem; margin-bottom: 25px; line-height: 1.5; font-weight: 600; color: #2c3e50; }
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn { 
+            background: #f1f8e9; color: var(--primary-dark); border: 2px solid var(--panel-easy); 
+            padding: 16px; font-size: 1.1rem; border-radius: 15px; cursor: pointer; transition: 0.2s;
+            font-family: 'Prompt', sans-serif;
+        }
+        .opt-btn:hover { background: var(--panel-easy); color: white; }
+
+        #loading { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 1000; font-size: 1.5rem; color: var(--primary-dark); font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <div id="loading">♻️ กำลังเตรียมข้อมูล...</div>
+
+    <div class="screen active" id="screen-login">
+        <h1>🌍 เกมตอบคำถามวันสิ่งแวดล้อมโลก 🌿</h1>
+        <div class="login-box">
+            <div style="font-size: 4.5rem; margin-bottom: 10px;">🍃</div>
+            <h2 style="color: var(--primary-dark); margin-top:0;">เหล่าผู้พิทักษ์โลก</h2>
+            <p>กรุณากรอกชื่อเพื่อเริ่มการแข่งขัน</p>
+            <input type="text" id="player-name" placeholder="ชื่อของคุณ..." autocomplete="off">
+            <br>
+            <button class="btn-start" onclick="startGame()">เริ่มเกม</button>
+            <p style="color:#666; font-size:0.85rem; margin-top:15px;">* คำอธิบาย : ตอบคำถามสะสมคะแนน หากตอบผิดเกมจะจบลงทันที! </p>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-game">
+        <div class="header-bar">
+            <div>ผู้เล่น: <span id="display-name" style="color:#a5d6a7;"></span></div>
+            <div>คะแนน: <span id="display-score" class="score-text">0</span> ♻️</div>
+        </div>
+
+        <div class="board">
+            <div>
+                <div class="column-title" style="border-bottom: 5px solid var(--panel-easy);">🌱 ง่าย (1)</div>
+                <div id="col-easy-panels"></div>
+            </div>
+            <div>
+                <div class="column-title" style="border-bottom: 5px solid var(--panel-med);">🌳 กลาง (2)</div>
+                <div id="col-med-panels"></div>
+            </div>
+            <div>
+                <div class="column-title" style="border-bottom: 5px solid var(--panel-hard);">🌲 ยาก (3)</div>
+                <div id="col-hard-panels"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-gameover">
+        <div class="login-box" style="border-color: #2e7d32; max-width: 550px;">
+            <h1 id="over-title" style="color: #ef4444; margin-top: 0;">จบการแข่งขัน!</h1>
+            <div id="over-emoji" style="font-size: 5rem;">🏆</div>
+            <h2>คะแนนรวมของคุณ: <span id="final-score" class="score-text" style="font-size:3rem;">0</span></h2>
+            <p id="save-status" style="font-weight:bold; color: var(--accent-blue);">ระบบกำลังบันทึกคะแนน...</p>
+            <button class="btn-start" style="margin-top:20px; background:#5d4037;" onclick="location.reload()">เล่นอีกครั้ง</button>
+        </div>
+    </div>
+
+    <div class="modal" id="quiz-modal">
+        <div class="modal-content">
+            <h3 id="modal-level-text" style="color: var(--accent-blue); margin-top:0; font-size:1.1rem;"></h3>
+            <div class="question-text" id="q-text"></div>
+            <div class="options-grid" id="q-options"></div>
+        </div>
+    </div>
+
+    <script>
+        /** * [จุดที่ต้องเติม] 
+         * นำ URL ที่ได้จากการ Deploy Web App ใน Google Apps Script มาใส่ในเครื่องหมายคำพูดด้านล่าง
+         */
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAay58e5Gbl2SX5QBRY_QICUQHQd6DPbxSLpd3cQOii1xMBTdee-I4Fm54P-2hXF_bUg/exec"; 
+
+        let questionsData = {};
+        let playerName = "";
+        let currentScore = 0;
+        let currentActiveQuestion = null;
+        let currentPanelId = null;
+
+        window.onload = () => {
+            // ดึงคำถามผ่าน API
+            fetch(WEB_APP_URL)
+                .then(res => res.json())
+                .then(data => {
+                    questionsData = data;
+                    document.getElementById('loading').style.display = 'none';
+                })
+                .catch(err => {
+                    console.error("Error loading questions:", err);
+                    document.getElementById('loading').innerText = "❌ ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่";
+                });
+        };
+
+        function startGame() {
+            const name = document.getElementById('player-name').value.trim();
+            if (!name) { alert('กรุณากรอกชื่อก่อนครับ!'); return; }
+            playerName = name;
+            document.getElementById('display-name').innerText = playerName;
+            document.getElementById('screen-login').classList.remove('active');
+            document.getElementById('screen-game').classList.add('active');
+            buildBoard();
+        }
+
+        function buildBoard() {
+            const levels = [
+                { key: 'ง่าย', id: 'col-easy-panels', css: 'easy', pts: 1 },
+                { key: 'กลาง', id: 'col-med-panels', css: 'med', pts: 2 },
+                { key: 'ยาก', id: 'col-hard-panels', css: 'hard', pts: 3 }
+            ];
+
+            levels.forEach(lvl => {
+                const container = document.getElementById(lvl.id);
+                container.innerHTML = '';
+                const qList = questionsData[lvl.key] || [];
+                
+                qList.forEach((q, i) => {
+                    const btn = document.createElement('div');
+                    btn.className = `panel ${lvl.css}`;
+                    btn.id = `panel-${lvl.key}-${i}`;
+                    btn.innerText = i + 1;
+                    btn.onclick = () => openQuestion(lvl.key, i, btn.id, lvl.pts);
+                    container.appendChild(btn);
+                });
+            });
+        }
+
+        function openQuestion(level, idx, pId, points) {
+            const panel = document.getElementById(pId);
+            if (panel.classList.contains('disabled')) return;
+
+            currentActiveQuestion = { data: questionsData[level][idx], points: points };
+            currentPanelId = pId;
+
+            document.getElementById('modal-level-text').innerText = `ระดับ: ${level} (+${points} คะแนน)`;
+            document.getElementById('q-text').innerText = currentActiveQuestion.data.q;
+            
+            const optDiv = document.getElementById('q-options');
+            optDiv.innerHTML = '';
+            currentActiveQuestion.data.options.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = 'opt-btn';
+                b.innerText = opt;
+                b.onclick = () => check(i);
+                optDiv.appendChild(b);
+            });
+            document.getElementById('quiz-modal').style.display = 'flex';
+        }
+
+        function check(idx) {
+            document.getElementById('quiz-modal').style.display = 'none';
+            
+            if (idx === currentActiveQuestion.data.a) {
+                alert("เย้ ตอบถูกแล้ว!"); 
+                currentScore += currentActiveQuestion.points;
+                document.getElementById('display-score').innerText = currentScore;
+                document.getElementById(currentPanelId).classList.add('disabled');
+                document.getElementById(currentPanelId).innerText = "✔️";
+                
+                const all = document.querySelectorAll('.panel');
+                const done = document.querySelectorAll('.panel.disabled');
+                if(all.length === done.length) gameOver(true);
+            } else {
+                alert("ขอแสดงความเสียใจคุณตอบผิด");
+                gameOver(false);
+            }
+        }
+
+        function gameOver(isWin) {
+            document.getElementById('screen-game').classList.remove('active');
+            document.getElementById('screen-gameover').classList.add('active');
+            document.getElementById('final-score').innerText = currentScore;
+
+            if(isWin) {
+                document.getElementById('over-title').innerText = "ยินดีด้วย! คุณคือสุดยอดนักอนุรักษ์";
+                document.getElementById('over-title').style.color = "#2e7d32";
+                document.getElementById('over-emoji').innerText = "👑";
+            }
+
+            // ส่งข้อมูลคะแนนไปบันทึกที่ Google Sheet ผ่าน API
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ name: playerName, score: currentScore })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if(res.success) {
+                    document.getElementById('save-status').innerText = "✅ บันทึกคะแนนสำเร็จแล้ว";
+                } else {
+                    document.getElementById('save-status').innerText = "❌ บันทึกคะแนนไม่สำเร็จ";
+                }
+            })
+            .catch(err => {
+                console.error("Save score error:", err);
+                document.getElementById('save-status').innerText = "❌ ติดปัญหาการเชื่อมต่อเซิร์ฟเวอร์";
+            });
+        }
+    </script>
+</body>
+</html>
