@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco-Warriors: Snakes & Ladders</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #2E8B57;
+            --light-green: #E0F2F1;
+            --primary-blue: #0288D1;
+            --accent-yellow: #FFC107;
+            --bg-color: #F1F8E9;
+            --dark-text: #263238;
+        }
+
+        body { font-family: 'Prompt', sans-serif; background-color: var(--bg-color); color: var(--dark-text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: var(--primary-green); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-bottom: 5px; text-align: center;}
+        .subtitle { color: var(--primary-blue); margin-bottom: 20px; font-weight: bold; text-align: center;}
+
+        .game-container { display: flex; gap: 25px; max-width: 1200px; width: 100%; flex-wrap: wrap; justify-content: center; }
+        
+        /* กระดานเกม */
+        .board { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(5, 1fr); gap: 6px; background-color: var(--primary-green); padding: 12px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); flex: 2; position: relative; min-width: 600px; height: 550px; }
+        .cell { background-color: var(--light-green); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; font-size: 1.2rem; font-weight: bold; color: #555; transition: 0.3s; }
+        
+        /* ประเภทช่องพิเศษ */
+        .cell.checkpoint { background-color: #C8E6C9; border: 2px solid var(--primary-green); }
+        .cell.snake { background-color: #FFCDD2; }
+        .cell.ladder { background-color: #BBDEFB; }
+        .cell.finish { background-color: #FFF9C4; border: 3px solid var(--accent-yellow); }
+        .cell-number { position: absolute; top: 6px; left: 8px; font-size: 0.85rem; opacity: 0.6; }
+        .cell-icon { font-size: 1.8rem; margin-top: 10px; }
+
+        /* ตัวละครผู้เล่น */
+        .tokens-container { position: absolute; bottom: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: 100%; }
+        .token { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #222; box-shadow: 0 4px 6px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; transform: translateY(0); transition: 0.2s; }
+        .p1 { background-color: #FF5252; color: white; text-shadow: 1px 1px 2px black; } .p1::after { content: "1"; }
+        .p2 { background-color: #448AFF; color: white; text-shadow: 1px 1px 2px black; } .p2::after { content: "2"; }
+        .p3 { background-color: #FFEB3B; color: #222; } .p3::after { content: "3"; } 
+        .p4 { background-color: #E040FB; color: white; text-shadow: 1px 1px 2px black; } .p4::after { content: "4"; }
+
+        /* Sidebar ส่วนควบคุม */
+        .sidebar { flex: 1; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 18px; min-width: 320px; }
+        .player-status { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; background: #f5f5f5; border: 2px solid transparent; transition: 0.3s; }
+        .player-status.active { border-color: var(--primary-green); background: #E8F5E9; transform: translateX(10px); box-shadow: -5px 0 0 var(--primary-green); }
+        
+        .dice-container { text-align: center; padding: 20px; background: var(--light-green); border-radius: 12px; border: 1px solid #c8e6c9; }
+        #dice-result { font-size: 4rem; margin: 10px 0; font-weight: bold; color: var(--primary-blue); }
+
+        button { background-color: var(--primary-green); color: white; border: none; padding: 14px 20px; font-size: 1.1rem; font-family: 'Prompt', sans-serif; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; font-weight: bold; box-shadow: 0 4px 0 #1b5e20; }
+        button:hover { background-color: #1b5e20; transform: translateY(-2px); }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        button:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
+        
+        .btn-danger { background-color: #D32F2F; box-shadow: 0 4px 0 #8e1c1c; }
+        .btn-danger:hover { background-color: #B71C1C; }
+
+        #log { height: 140px; overflow-y: auto; background: #fafafa; padding: 12px; border-radius: 8px; font-size: 0.95rem; border: 1px solid #eee; line-height: 1.6; }
+
+        /* Modal / Popup */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 35px; border-radius: 20px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
+        .option-btn { background: #f0f7ff; color: #0277bd; border: 2px solid #0288d1; padding: 14px; font-size: 1.1rem; box-shadow: none; }
+        .option-btn:hover { background: #e1f5fe; }
+
+        /* Loading */
+        #loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.96); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; border-radius: 12px; }
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--primary-green); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <h1>🌍 Eco-Warriors: Snakes & Ladders ♻️</h1>
+    <div class="subtitle">โครงการรักษ์โลกฉบับ Interactive</div>
+
+    <div class="game-container">
+        <div class="board" id="board">
+            <div id="loading-overlay">
+                <div class="spinner"></div>
+                <h3 id="loading-text" style="color: var(--primary-green); margin-top: 20px;">กำลังเตรียมข้อมูลจากเซิร์ฟเวอร์...</h3>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div id="players-list">
+                <div class="player-status active" id="ps-0"><div class="token p1"></div> Player 1 : ช่อง <span id="pos-0">1</span></div>
+                <div class="player-status" id="ps-1"><div class="token p2"></div> Player 2 : ช่อง <span id="pos-1">1</span></div>
+                <div class="player-status" id="ps-2"><div class="token p3"></div> Player 3 : ช่อง <span id="pos-2">1</span></div>
+                <div class="player-status" id="ps-3"><div class="token p4"></div> Player 4 : ช่อง <span id="pos-3">1</span></div>
+            </div>
+
+            <div class="dice-container">
+                <div id="turn-indicator" style="font-weight:bold; font-size:1.1rem;">ตาของ Player 1</div>
+                <div id="dice-result">🎲</div>
+                <button id="roll-btn" onclick="rollDice()" disabled>กำลังโหลด...</button>
+            </div>
+
+            <div id="log">
+                <strong>บันทึกกิจกรรม:</strong><br>ระบบกำลังเริ่มทำงาน...
+            </div>
+
+            <button class="btn-danger" onclick="resetGame()">🔄 เริ่มเกมใหม่</button>
+            <button class="btn-danger" style="background-color:#0288D1; box-shadow: 0 4px 0 #01579B; margin-top:10px;" onclick="window.location.href='index.html'">🌿 กลับไปเกมตอบคำถาม</button>
+        </div>
+    </div>
+
+    <div class="modal" id="notify-modal">
+        <div class="modal-content">
+            <h2 id="notify-title" style="color: var(--primary-blue); margin-top:0;">กิจกรรม</h2>
+            <p id="notify-text" style="font-size: 1.25rem; margin: 25px 0; line-height: 1.5;"></p>
+            <button onclick="closeNotify()">ตกลง</button>
+        </div>
+    </div>
+
+    <div class="modal" id="quiz-modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <h2 style="color: var(--primary-green); margin-top:0;">🌱 Checkpoint Quiz!</h2>
+            <p id="question-text" style="font-size: 1.3rem; margin: 20px 0; font-weight: bold; color: #333;"></p>
+            <div class="options" id="quiz-options"></div>
+        </div>
+    </div>
+
+    <script>
+        /** * [จุดที่ต้องเติม] 
+         * นำ URL ที่ได้จากการ Deploy Web App ของเกมบันไดงู มาใส่ในเครื่องหมายคำพูดด้านล่าง
+         */
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzxxLwI_rK6akmuPV1o3Z-95PoA4hrtihuF4kKTogLOnq7OjcWpQmCMsDA5QAAOKHY8/exec"; 
+
+        let checkpointsData = {};
+        const ladders = { 4: 14, 12: 22 }; 
+        const snakes = { 17: 7, 28: 19 };  
+        const checkpointSpaces = [3, 6, 9, 13, 16, 20, 23, 25, 27, 29];
+        
+        let positions = [1, 1, 1, 1];
+        let currentTurn = 0;
+        let isGameEnded = false;
+        let notifyCallback = null;
+        const totalSpaces = 30;
+
+        // ดึงคำถามจาก Google Sheets ผ่าน API
+        function fetchQuestions() {
+            fetch(WEB_APP_URL)
+                .then(response => response.json())
+                .then(data => {
+                    checkpointsData = data;
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    document.getElementById('roll-btn').disabled = false;
+                    document.getElementById('roll-btn').innerText = "ทอยลูกเต๋า";
+                    document.getElementById('log').innerHTML = '<strong>บันทึกกิจกรรม:</strong><br>✅ เชื่อมต่อข้อมูลสำเร็จ! เริ่มเกมได้';
+                })
+                .catch(err => {
+                    console.error("Error loading questions:", err);
+                    document.getElementById('loading-text').innerText = "❌ เกิดข้อผิดพลาดในการโหลดข้อมูล";
+                    document.getElementById('loading-text').style.color = "red";
+                    document.querySelector('.spinner').style.display = "none";
+                });
+        }
+
+        const boardLayout = [
+            30, 29, 28, 27, 26, 25,
+            19, 20, 21, 22, 23, 24,
+            18, 17, 16, 15, 14, 13,
+            7,  8,  9,  10, 11, 12,
+            6,  5,  4,  3,  2,  1
+        ];
+
+        function initBoard() {
+            const boardEl = document.getElementById('board');
+            const loader = document.getElementById('loading-overlay');
+            boardEl.innerHTML = '';
+            boardEl.appendChild(loader);
+
+            boardLayout.forEach(num => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${num}`;
+                
+                let icon = '';
+                if (num === 30) { cell.classList.add('finish'); icon = '🏆'; }
+                else if (checkpointSpaces.includes(num)) { cell.classList.add('checkpoint'); icon = '🌱'; }
+                else if (ladders[num]) { cell.classList.add('ladder'); icon = '🪜'; }
+                else if (snakes[num]) { cell.classList.add('snake'); icon = '🐍'; }
+
+                cell.innerHTML = `
+                    <div class="cell-number">${num}</div>
+                    <div class="cell-icon">${icon}</div>
+                    <div class="tokens-container" id="tokens-${num}"></div>
+                `;
+                boardEl.appendChild(cell);
+            });
+            updateTokens();
+        }
+
+        function updateTokens() {
+            for (let i = 1; i <= totalSpaces; i++) {
+                const container = document.getElementById(`tokens-${i}`);
+                if(container) container.innerHTML = '';
+            }
+            positions.forEach((pos, index) => {
+                const token = document.createElement('div');
+                token.className = `token p${index + 1}`;
+                const cell = document.getElementById(`tokens-${pos}`);
+                if(cell) cell.appendChild(token);
+                document.getElementById(`pos-${index}`).innerText = pos;
+            });
+        }
+
+        function showNotify(title, text, callback) {
+            document.getElementById('notify-title').innerText = title;
+            document.getElementById('notify-text').innerText = text;
+            document.getElementById('notify-modal').style.display = 'flex';
+            notifyCallback = callback;
+        }
+
+        function closeNotify() {
+            document.getElementById('notify-modal').style.display = 'none';
+            if (notifyCallback) notifyCallback();
+        }
+
+        function logMsg(msg) {
+            const logEl = document.getElementById('log');
+            logEl.innerHTML += `<br>• ${msg}`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function rollDice() {
+            if (isGameEnded) return;
+            document.getElementById('roll-btn').disabled = true;
+            const diceValue = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('dice-result').innerText = `🎲 ${diceValue}`;
+            logMsg(`<b>Player ${currentTurn + 1}</b> ทอยได้ ${diceValue}`);
+            
+            setTimeout(() => movePlayer(diceValue), 600);
+        }
+
+        function movePlayer(steps) {
+            let newPos = positions[currentTurn] + steps;
+            
+            if (newPos >= totalSpaces) {
+                newPos = totalSpaces;
+                positions[currentTurn] = newPos;
+                updateTokens();
+                isGameEnded = true;
+                showNotify("🎉 ยินดีด้วย!", `Player ${currentTurn + 1} ถึงเส้นชัยแล้ว! คุณคือสุดยอดผู้พิทักษ์โลก 🌍`, () => {});
+                return;
+            }
+
+            positions[currentTurn] = newPos;
+            updateTokens();
+            
+            setTimeout(() => {
+                if (ladders[newPos]) {
+                    showNotify("🪜 เจอบันได!", `โชคดีมาก! คุณปีนจากช่อง ${newPos} ขึ้นไปที่ช่อง ${ladders[newPos]}`, () => {
+                        positions[currentTurn] = ladders[newPos];
+                        updateTokens();
+                        nextTurn();
+                    });
+                } else if (snakes[newPos]) {
+                    showNotify("🐍 เจองู!", `ว้าย! คุณโดนงูที่ช่อง ${newPos} ฉกจนไถลลงมาที่ช่อง ${snakes[newPos]}`, () => {
+                        positions[currentTurn] = snakes[newPos];
+                        updateTokens();
+                        nextTurn();
+                    });
+                } else if (checkpointSpaces.includes(newPos)) {
+                    triggerQuiz(newPos);
+                } else {
+                    showNotify("เดินหมาก", `Player ${currentTurn + 1} เดินมาหยุดที่ช่อง ${newPos}`, () => {
+                        nextTurn();
+                    });
+                }
+            }, 600);
+        }
+
+        let currentSpace = 0;
+        function triggerQuiz(space) {
+            currentSpace = space;
+            const qData = checkpointsData[space];
+            if(!qData) { nextTurn(); return; }
+
+            document.getElementById('question-text').innerText = qData.q;
+            const optContainer = document.getElementById('quiz-options');
+            optContainer.innerHTML = '';
+            
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx);
+                optContainer.appendChild(btn);
+            });
+            document.getElementById('quiz-modal').style.display = 'flex';
+        }
+
+        function checkAnswer(idx) {
+            document.getElementById('quiz-modal').style.display = 'none';
+            const qData = checkpointsData[currentSpace];
+            if (idx === qData.a) {
+                showNotify("✅ ถูกต้อง!", `สุดยอด! รับรางวัลเดินหน้าต่ออีก ${qData.up} ช่อง`, () => {
+                    positions[currentTurn] = Math.min(totalSpaces, positions[currentTurn] + qData.up);
+                    updateTokens();
+                    nextTurn();
+                });
+            } else {
+                showNotify("❌ เกือบถูกแล้ว!", `คำตอบที่ถูกคือ: ${qData.options[qData.a]}\nคุณต้องถอยหลัง ${qData.down} ช่อง`, () => {
+                    positions[currentTurn] = Math.max(1, positions[currentTurn] - qData.down);
+                    updateTokens();
+                    nextTurn();
+                });
+            }
+        }
+
+        function nextTurn() {
+            document.getElementById(`ps-${currentTurn}`).classList.remove('active');
+            currentTurn = (currentTurn + 1) % 4;
+            document.getElementById(`ps-${currentTurn}`).classList.add('active');
+            document.getElementById('turn-indicator').innerText = `ตาของ Player ${currentTurn + 1}`;
+            if(!isGameEnded) document.getElementById('roll-btn').disabled = false;
+        }
+
+        function resetGame() {
+            if(confirm("คุณต้องการล้างข้อมูลเพื่อเริ่มเล่นใหม่ใช่หรือไม่?")) {
+                location.reload();
+            }
+        }
+
+        // เริ่มต้นเกม
+        initBoard();
+        fetchQuestions();
+    </script>
+</body>
+</html>
