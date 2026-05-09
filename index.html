@@ -269,6 +269,49 @@
             font-weight: bold;
         }
 
+        .result-avatar {
+            width: 170px;
+            height: 170px;
+            object-fit: cover;
+            border-radius: 24px;
+            border: 5px solid #2e7d32;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+            margin: 10px auto 20px auto;
+            background: #f1f8e9;
+        }
+
+        .rank-box {
+            background: #f1f8e9;
+            border: 2px dashed #66bb6a;
+            border-radius: 18px;
+            padding: 16px;
+            margin: 10px 0 18px 0;
+        }
+
+        .rank-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 6px;
+        }
+
+        .rank-desc {
+            font-size: 1.05rem;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .staff-note {
+            margin-top: 14px;
+            padding: 14px 16px;
+            background: #fff8e1;
+            border: 2px solid #fbc02d;
+            border-radius: 14px;
+            color: #6d4c41;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
         @media (max-width: 768px) {
             .board {
                 grid-template-columns: 1fr;
@@ -282,6 +325,11 @@
 
             h1 {
                 font-size: 1.7rem;
+            }
+
+            .result-avatar {
+                width: 130px;
+                height: 130px;
             }
         }
     </style>
@@ -342,16 +390,26 @@
     </div>
 
     <div class="screen" id="screen-gameover">
-        <div class="login-box" style="border-color: #2e7d32; max-width: 550px;">
+        <div class="login-box" style="border-color: #2e7d32; max-width: 580px;">
             <h1 id="over-title" style="color: #ef4444; margin-top: 0;">จบการแข่งขัน!</h1>
-            <div id="over-emoji" style="font-size: 5rem;">🏆</div>
 
-            <h2>
-                คะแนนรวมของคุณ:
+            <img id="over-avatar" class="result-avatar" src="1.png" alt="rank image">
+
+            <div id="rank-info" class="rank-box">
+                <div class="rank-title">Rank: Waste Rookie</div>
+                <div class="rank-desc">มือใหม่สายคัดแยก เริ่มต้นพิชิตโลกสีเขียว</div>
+            </div>
+
+            <h2 style="margin-bottom: 10px;">
+                คะแนนรวมของคุณคือ
                 <span id="final-score" class="score-text" style="font-size:3rem;">0</span>
             </h2>
 
-            <p id="save-status" style="font-weight:bold; color: var(--accent-blue);">
+            <div class="staff-note">
+                โปรดแสดงหน้าจอนี้แก่เจ้าหน้าที่ประจำซุ้มเพื่อ Stamp การ์ดกิจกรรมและรับของที่ระลึก
+            </div>
+
+            <p id="save-status" style="font-weight:bold; color: var(--accent-blue); margin-top:18px;">
                 ระบบกำลังบันทึกคะแนน...
             </p>
 
@@ -375,9 +433,6 @@
     </div>
 
     <script>
-        /**
-         * URL จาก Google Apps Script Web App
-         */
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAay58e5Gbl2SX5QBRY_QICUQHQd6DPbxSLpd3cQOii1xMBTdee-I4Fm54P-2hXF_bUg/exec"; 
 
         let questionsData = {};
@@ -386,9 +441,6 @@
         let currentActiveQuestion = null;
         let currentPanelId = null;
 
-        /**
-         * Timer setting
-         */
         const QUESTION_TIME = 30;
         let timeLeft = QUESTION_TIME;
         let timerInterval = null;
@@ -582,17 +634,49 @@
             document.getElementById('screen-gameover').classList.add('active');
             document.getElementById('final-score').innerText = currentScore;
 
+            let rankName = "";
+            let rankDesc = "";
+            let rankImage = "1.png";
+
+            if (currentScore >= 1 && currentScore <= 10) {
+                rankName = "Waste Rookie";
+                rankDesc = "มือใหม่สายคัดแยก เริ่มต้นพิชิตโลกสีเขียว";
+                rankImage = "1.png";
+            } else if (currentScore >= 11 && currentScore <= 20) {
+                rankName = "Waste Ranger";
+                rankDesc = "สายรักษ์โลกตัวจริง รู้ลึกเรื่องการจัดการขยะ";
+                rankImage = "2.png";
+            } else if (currentScore >= 21 && currentScore <= 30) {
+                rankName = "Waste Master";
+                rankDesc = "สุดยอดแห่งการจัดการขยะ";
+                rankImage = "3.png";
+            } else {
+                rankName = "Waste Rookie";
+                rankDesc = "มือใหม่สายคัดแยก เริ่มต้นพิชิตโลกสีเขียว";
+                rankImage = "1.png";
+            }
+
             if (isWin) {
                 document.getElementById('over-title').innerText = "ยินดีด้วย! คุณคือสุดยอดนักอนุรักษ์";
                 document.getElementById('over-title').style.color = "#2e7d32";
-                document.getElementById('over-emoji').innerText = "👑";
+            } else {
+                document.getElementById('over-title').innerText = "จบการแข่งขัน!";
+                document.getElementById('over-title').style.color = "#ef4444";
             }
+
+            document.getElementById('over-avatar').src = rankImage;
+
+            document.getElementById('rank-info').innerHTML = `
+                <div class="rank-title">Rank: ${rankName}</div>
+                <div class="rank-desc">${rankDesc}</div>
+            `;
 
             fetch(WEB_APP_URL, {
                 method: "POST",
                 body: JSON.stringify({
                     name: playerName,
-                    score: currentScore
+                    score: currentScore,
+                    rank: rankName
                 })
             })
             .then(res => res.json())
