@@ -270,14 +270,22 @@
         }
 
         .result-avatar {
-            width: 170px;
-            height: 170px;
-            object-fit: cover;
-            border-radius: 24px;
-            border: 5px solid #2e7d32;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-            margin: 10px auto 20px auto;
-            background: #f1f8e9;
+            width: 190px;
+            height: auto;
+            max-width: 100%;
+            object-fit: contain;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            margin: 10px auto 18px auto;
+            background: transparent;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .result-avatar {
+                width: 150px;
+            }
         }
 
         .rank-box {
