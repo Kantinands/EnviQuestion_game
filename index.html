@@ -337,7 +337,7 @@
 
             .result-avatar {
                 width: 130px;
-                height: 130px;
+                height: auto;
             }
         }
     </style>
@@ -403,7 +403,7 @@
         <div class="login-box" style="border-color: #2e7d32; max-width: 580px;">
             <h1 id="over-title" style="color: #ef4444; margin-top: 0;">จบการแข่งขัน!</h1>
 
-            <img id="over-avatar" class="result-avatar" src="1.png" alt="rank image">
+            <img id="over-avatar" class="result-avatar" src="https://kantinands.github.io/EnviQuestion_game/1.png" alt="rank image">
 
             <div id="rank-info-wrapper">
                 <div id="rank-info" class="rank-box">
@@ -448,6 +448,7 @@
 
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzAay58e5Gbl2SX5QBRY_QICUQHQd6DPbxSLpd3cQOii1xMBTdee-I4Fm54P-2hXF_bUg/exec";
+        const IMAGE_BASE = "https://kantinands.github.io/EnviQuestion_game/";
 
         let questionsData = {};
         let playerName = "";
@@ -560,9 +561,7 @@
             if (questionLocked) return;
 
             questionLocked = true;
-
             disableOptionButtons();
-
             document.getElementById('quiz-modal').style.display = 'none';
 
             alert("หมดเวลา! ถือว่าตอบผิด");
@@ -590,16 +589,13 @@
 
             currentActiveQuestion.data.options.forEach((opt, i) => {
                 const b = document.createElement('button');
-
                 b.className = 'opt-btn';
                 b.innerText = opt;
                 b.onclick = () => check(i);
-
                 optDiv.appendChild(b);
             });
 
             document.getElementById('quiz-modal').style.display = 'flex';
-
             startTimer();
         }
 
@@ -616,7 +612,6 @@
             questionLocked = true;
             stopTimer();
             disableOptionButtons();
-
             document.getElementById('quiz-modal').style.display = 'none';
 
             if (idx === currentActiveQuestion.data.a) {
@@ -650,12 +645,12 @@
 
             let rankName = "";
             let rankDesc = "";
-            let rankImage = "1.png";
+            let rankImage = IMAGE_BASE + "1.png";
 
             if (currentScore <= 1) {
                 document.getElementById('over-title').innerText = "ภารกิจไม่สำเร็จ...ลองใหม่อีกครั้ง";
                 document.getElementById('over-title').style.color = "#ef4444";
-                document.getElementById('over-avatar').src = "https://kantinands.github.io/EnviQuestion_game/4.png";;
+                document.getElementById('over-avatar').src = IMAGE_BASE + "4.png";
                 document.getElementById('rank-info-wrapper').style.display = "none";
                 document.getElementById('score-section').style.display = "none";
 
@@ -668,19 +663,19 @@
             if (currentScore >= 2 && currentScore <= 10) {
                 rankName = "Waste Rookie";
                 rankDesc = "มือใหม่สายคัดแยก เริ่มต้นพิชิตโลกสีเขียว";
-                rankImage = "1.png";
+                rankImage = IMAGE_BASE + "1.png";
             } else if (currentScore >= 11 && currentScore <= 20) {
                 rankName = "Waste Ranger";
                 rankDesc = "สายรักษ์โลกตัวจริง รู้ลึกเรื่องการจัดการขยะ";
-                rankImage = "2.png";
+                rankImage = IMAGE_BASE + "2.png";
             } else if (currentScore >= 21 && currentScore <= 30) {
                 rankName = "Waste Master";
                 rankDesc = "สุดยอดแห่งการจัดการขยะ";
-                rankImage = "3.png";
+                rankImage = IMAGE_BASE + "3.png";
             } else {
                 rankName = "Waste Rookie";
                 rankDesc = "มือใหม่สายคัดแยก เริ่มต้นพิชิตโลกสีเขียว";
-                rankImage = "1.png";
+                rankImage = IMAGE_BASE + "1.png";
             }
 
             document.getElementById('rank-info-wrapper').style.display = "block";
